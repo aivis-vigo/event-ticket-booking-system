@@ -138,17 +138,73 @@ Once endpoints are implemented, test them using:
 
 ### Running Tests
 
-Execute all unit tests:
+#### Execute All Unit Tests
+
+Run all tests in the project:
 
 ```bash
-./mvnw test
+./mvnw clean test
+```
+
+Or with Maven installed globally:
+
+```bash
+mvn clean test
+```
+
+#### Run Tests in Quiet Mode (Minimal Output)
+
+Run all tests with fewer logs:
+
+```bash
+./mvnw clean test -q
+```
+
+#### Run Specific Test Classes
+
+Run all entity tests:
+
+```bash
+./mvnw test -Dtest=EventTest,TicketTest,BookingTest
 ```
 
 Run a specific test class:
 
 ```bash
+./mvnw test -Dtest=EventTest
+```
+
+Or:
+
+```bash
 ./mvnw test -Dtest=EventTicketBookingSystemApplicationTests
 ```
+
+#### Run Tests with Detailed Output
+
+For verbose test execution:
+
+```bash
+./mvnw test -X
+```
+
+#### Test Files Location
+
+Unit tests are located in:
+
+```
+src/test/java/com/example/event_ticket_booking_system/
+├── entity/
+│   ├── EventTest.java           # Tests for Event entity
+│   ├── TicketTest.java          # Tests for Ticket entity
+│   └── BookingTest.java         # Tests for Booking entity
+└── EventTicketBookingSystemApplicationTests.java
+```
+
+#### Test Coverage Summary
+
+- **Entity Tests:** 35+ test cases covering all entities (Event, Ticket, Booking)
+- **Coverage includes:** Getters/setters, constructors, relationships, status transitions, and edge cases
 
 ### Code Formatting
 
