@@ -17,10 +17,10 @@ public class EventController {
     @Autowired
     private EventRepository eventRepository;
 
-    // @GetMapping
-    // public List<Event> getAllEvents() {
-    //     return eventRepository.findAll();
-    // }
+     @GetMapping
+     public List<Event> getAllEvents() {
+         return eventRepository.findAll();
+     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(@PathVariable Long id) {
