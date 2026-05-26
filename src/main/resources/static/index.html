@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ticket Booking System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Event Ticket Booking System</h1>
+            <p class="subtitle">Discover and book amazing events</p>
+        </header>
+
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showTab('events')">Events</button>
+            <button class="nav-btn" onclick="showTab('tickets')">Tickets</button>
+            <button class="nav-btn" onclick="showTab('bookings')">Bookings</button>
+        </nav>
+
+        <!-- Events Section -->
+        <section id="events" class="tab-content active">
+            <h2>Available Events</h2>
+            <div id="events-container" class="cards-grid">
+                <div class="loader">Loading events...</div>
+            </div>
+        </section>
+
+        <!-- Tickets Section -->
+        <section id="tickets" class="tab-content" style="display: none;">
+            <h2>All Tickets</h2>
+            <div id="tickets-container" class="cards-grid">
+                <div class="loader">Loading tickets...</div>
+            </div>
+        </section>
+
+        <!-- Bookings Section -->
+        <section id="bookings" class="tab-content" style="display: none;">
+            <h2>Recent Bookings</h2>
+            <div id="bookings-container" class="cards-grid">
+                <div class="loader">Loading bookings...</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
