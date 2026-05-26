@@ -31,3 +31,91 @@ build/
 
 ### VS Code ###
 .vscode/
+*.code-workspace
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+application-local.properties
+
+### Operating System Files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Logs ###
+*.log
+*.log.*
+/logs/
+/log/
+
+### Temporary Files ###
+*.tmp
+*.temp
+*.bak
+*~
+.swp
+.swo
+*#
+
+### Database Files ###
+*.db
+*.sqlite
+*.h2.db
+
+### Compiled Classes ###
+*.class
+
+### JAR, WAR, and Archive Files ###
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Gradle ###
+.gradle/
+gradle-wrapper.properties
+
+### Maven Wrapper ###
+.mvn/
+
+### IDE - Eclipse Extensions ###
+.jks
+
+### IDE - JetBrains ###
+*.jks
+out/
+
+### Spring Boot Dev Tools ###
+spring-boot-devtools.properties
+
+### Maven Release Files ###
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+### Node Modules (if frontend is in same repo) ###
+node_modules/
+npm-debug.log
+yarn-error.log
+
+### CVS ###
+/CVS/*
+!CVS/
+!CVS/.keep
+
+### SVN ###
+.svn/
