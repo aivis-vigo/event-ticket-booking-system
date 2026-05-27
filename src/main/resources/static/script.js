@@ -2,7 +2,7 @@
 const API_BASE = '/api';
 
 // Initialize the app
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadEvents();
 });
 
@@ -48,21 +48,31 @@ function loadEvents() {
                     <div class="card-header">
                         <div class="card-title">${escapeHtml(event.name)}</div>
                     </div>
+            
                     <p class="card-description">${escapeHtml(event.description)}</p>
+            
                     <div class="card-meta">
                         <div class="meta-item">
                             <span class="meta-label">📅 Date:</span>
                             <span class="meta-value">${formatDate(event.eventDate)}</span>
                         </div>
+            
                         <div class="meta-item">
                             <span class="meta-label">📍 Location:</span>
                             <span class="meta-value">${escapeHtml(event.location)}</span>
                         </div>
+            
                         <div class="meta-item">
                             <span class="meta-label">🎫 Tickets:</span>
                             <span class="meta-value">${event.totalTickets}</span>
                         </div>
+            
                         <div class="price">$${event.ticketPrice.toFixed(2)}</div>
+                    </div>
+            
+                    <div class="card-actions">
+                        <button onclick="editEvent(${event.id})">Edit</button>
+                        <button class="danger-btn" onclick="deleteEvent(${event.id})">Delete</button>
                     </div>
                 </div>
             `).join('');
@@ -71,6 +81,161 @@ function loadEvents() {
             console.error('Error loading events:', error);
             container.innerHTML = '<div class="empty-state"><h3>Error loading events</h3></div>';
         });
+}
+
+function createEvent() {
+    const eventData = {
+        name: document.getElementById('eventName').value,
+        description: document.getElementById('eventDescription').value,
+        eventDate: document.getElementById('eventDate').value,
+        location: document.getElementById('eventLocation').value,
+        totalTickets: parseInt(document.getElementById('totalTickets').value),
+        ticketPrice: parseFloat(document.getElementById('ticketPrice').value)
+    };
+
+    fetch(`${API_BASE}/events`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData)
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to create event');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Event created successfully!');
+            loadEvents();
+        })
+        .catch(error => {
+            console.error(error);
+            alert(error.message);
+        });
+}
+
+function deleteEvent(id) {
+    if (!confirm('Delete this event?')) {
+        return;
+    }
+
+    fetch(`${API_BASE}/events/${id}`, {
+        method: 'DELETE'
+    })
+        .then(response => {
+            if (response.ok) {
+                alert('Event deleted');
+                loadEvents();
+            } else {
+                alert('Failed to delete');
+            }
+        });
+}
+
+function editEvent(id) {
+    const updatedName = prompt('Enter new event name');
+
+    if (!updatedName) return;
+
+    const updatedData = {
+        name: updatedName,
+        description: "Updated Description",
+        eventDate: "2026-12-31T18:00:00",
+        location: "Updated Location",
+        totalTickets: 100,
+        ticketPrice: 50
+    };
+
+    fetch(`${API_BASE}/events/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedData)
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Update failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Event updated!');
+            loadEvents();
+        })
+        .catch(error => {
+            alert(error.message);
+        });
+}
+
+function searchEvents() {
+    const keyword = document.getElementById('keyword').value;
+
+    fetch(`${API_BASE}/events?keyword=${keyword}`)
+        .then(response => response.json())
+        .then(displayEvents)
+        .catch(error => console.error(error));
+}
+
+function loadUpcomingEvents() {
+    fetch(`${API_BASE}/events/upcoming`)
+        .then(response => response.json())
+        .then(displayEvents)
+        .catch(error => console.error(error));
+}
+
+function searchByLocation() {
+    const location = document.getElementById('locationSearch').value;
+
+    fetch(`${API_BASE}/events/search?location=${location}`)
+        .then(response => response.json())
+        .then(displayEvents)
+        .catch(error => console.error(error));
+}
+
+function searchByPrice() {
+    const minPrice = document.getElementById('minPrice').value;
+    const maxPrice = document.getElementById('maxPrice').value;
+
+    fetch(`${API_BASE}/events/search?minPrice=${minPrice}&maxPrice=${maxPrice}`)
+        .then(response => response.json())
+        .then(displayEvents)
+        .catch(error => console.error(error));
+}
+
+function displayEvents(events) {
+    const container = document.getElementById('events-container');
+
+    if (events.length === 0) {
+        container.innerHTML = '<div class="empty-state"><h3>No events found</h3></div>';
+        return;
+    }
+
+    container.innerHTML = events.map(event => `
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">${escapeHtml(event.name)}</div>
+            </div>
+
+            <p class="card-description">${escapeHtml(event.description)}</p>
+
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">📍 Location:</span>
+                    <span class="meta-value">${escapeHtml(event.location)}</span>
+                </div>
+
+                <div class="price">$${event.ticketPrice.toFixed(2)}</div>
+            </div>
+
+            <div class="card-actions">
+                <button onclick="editEvent(${event.id})">Edit</button>
+                <button class="danger-btn" onclick="deleteEvent(${event.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Load and display tickets
@@ -171,7 +336,7 @@ function loadBookings() {
 
 // Helper function to format dates
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'};
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
 

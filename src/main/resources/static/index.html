@@ -20,8 +20,50 @@
         </nav>
 
         <!-- Events Section -->
+<!--        <section id="events" class="tab-content active">-->
+<!--            <h2>Available Events</h2>-->
+<!--            <div id="events-container" class="cards-grid">-->
+<!--                <div class="loader">Loading events...</div>-->
+<!--            </div>-->
+<!--        </section>-->
         <section id="events" class="tab-content active">
+
+            <h2>Event Management</h2>
+
+            <!-- Search Bar -->
+            <div class="controls">
+                <input type="text" id="keyword" placeholder="Search events..." />
+                <button onclick="searchEvents()">Search</button>
+                <button onclick="loadUpcomingEvents()">Upcoming</button>
+                <button onclick="loadEvents()">All Events</button>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="controls">
+                <input type="text" id="locationSearch" placeholder="Location" />
+                <input type="number" id="minPrice" placeholder="Min Price" />
+                <input type="number" id="maxPrice" placeholder="Max Price" />
+
+                <button onclick="searchByLocation()">Search Location</button>
+                <button onclick="searchByPrice()">Search Price</button>
+            </div>
+
+            <!-- Create Event Form -->
+            <div class="form-container">
+                <h3>Create Event</h3>
+
+                <input type="text" id="eventName" placeholder="Event Name" />
+                <textarea id="eventDescription" placeholder="Description"></textarea>
+                <input type="datetime-local" id="eventDate" />
+                <input type="text" id="eventLocation" placeholder="Location" />
+                <input type="number" id="totalTickets" placeholder="Total Tickets" />
+                <input type="number" step="0.01" id="ticketPrice" placeholder="Ticket Price" />
+
+                <button onclick="createEvent()">Create Event</button>
+            </div>
+
             <h2>Available Events</h2>
+
             <div id="events-container" class="cards-grid">
                 <div class="loader">Loading events...</div>
             </div>
