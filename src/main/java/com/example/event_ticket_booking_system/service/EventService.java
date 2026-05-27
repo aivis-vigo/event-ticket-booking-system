@@ -17,17 +17,14 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
-    // ── Fetch all ────────────────────────────────────────────────────────────
     public List<EventDTO> getAllEvents() {
         return eventRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // ── Fetch by ID ──────────────────────────────────────────────────────────
     public Optional<EventDTO> getEventById(Long id) {
         return eventRepository.findById(id).map(this::toDTO);
     }
 
-    // ── Search / filter ──────────────────────────────────────────────────────
     public List<EventDTO> searchEvents(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return getAllEvents();
@@ -48,14 +45,12 @@ public class EventService {
         return eventRepository.findByTicketPriceBetween(minPrice, maxPrice).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // ── Create ───────────────────────────────────────────────────────────────
     public EventDTO createEvent(EventDTO dto) {
         validateEvent(dto);
         Event event = toEntity(dto);
         return toDTO(eventRepository.save(event));
     }
 
-    // ── Update ───────────────────────────────────────────────────────────────
     public Optional<EventDTO> updateEvent(Long id, EventDTO dto) {
         return eventRepository.findById(id).map(existing -> {
             validateEvent(dto);
@@ -69,7 +64,6 @@ public class EventService {
         });
     }
 
-    // ── Delete ───────────────────────────────────────────────────────────────
     public boolean deleteEvent(Long id) {
         if (eventRepository.existsById(id)) {
             eventRepository.deleteById(id);
@@ -78,7 +72,6 @@ public class EventService {
         return false;
     }
 
-    // ── Validation ───────────────────────────────────────────────────────────
     private void validateEvent(EventDTO dto) {
         if (dto.getName() == null || dto.getName().isBlank()) {
             throw new IllegalArgumentException("Event name must not be blank.");
@@ -103,7 +96,6 @@ public class EventService {
         }
     }
 
-    // ── Mapping helpers ──────────────────────────────────────────────────────
     public EventDTO toDTO(Event event) {
         EventDTO dto = new EventDTO();
         dto.setId(event.getId());

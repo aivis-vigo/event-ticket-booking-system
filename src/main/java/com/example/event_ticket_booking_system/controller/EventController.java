@@ -16,7 +16,6 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    // ── GET /api/events ──────────────────────────────────────────────────────
     // Optional ?keyword= query parameter for search
     @GetMapping
     public List<EventDTO> getAllEvents(@RequestParam(required = false) String keyword) {
@@ -26,19 +25,17 @@ public class EventController {
         return eventService.getAllEvents();
     }
 
-    // ── GET /api/events/{id} ─────────────────────────────────────────────────
     @GetMapping("/{id}")
     public ResponseEntity<EventDTO> getEventById(@PathVariable Long id) {
         return eventService.getEventById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // ── GET /api/events/upcoming ─────────────────────────────────────────────
     @GetMapping("/upcoming")
     public List<EventDTO> getUpcomingEvents() {
         return eventService.getUpcomingEvents();
     }
 
-    // ── GET /api/events/search?location=&minPrice=&maxPrice= ─────────────────
+    // GET /api/events/search?location=&minPrice=&maxPrice=
     @GetMapping("/search")
     public List<EventDTO> searchEvents(@RequestParam(required = false) String location, @RequestParam(required = false) Double minPrice, @RequestParam(required = false) Double maxPrice) {
 
@@ -51,7 +48,7 @@ public class EventController {
         return eventService.getAllEvents();
     }
 
-    // ── POST /api/events ─────────────────────────────────────────────────────
+    // POST /api/events
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody EventDTO eventDTO) {
         try {
@@ -62,7 +59,7 @@ public class EventController {
         }
     }
 
-    // ── PUT /api/events/{id} ─────────────────────────────────────────────────
+    // PUT /api/events/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEvent(@PathVariable Long id, @RequestBody EventDTO eventDTO) {
         try {
@@ -72,7 +69,7 @@ public class EventController {
         }
     }
 
-    // ── DELETE /api/events/{id} ──────────────────────────────────────────────
+    // DELETE /api/events/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         return eventService.deleteEvent(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

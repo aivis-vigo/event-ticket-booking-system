@@ -12,23 +12,23 @@ import java.util.List;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    // ── Upcoming events ──────────────────────────────────────────────────────
+    // Upcoming events
     List<Event> findByEventDateAfter(LocalDateTime dateTime);
 
-    // ── Location filter (case-insensitive partial match) ─────────────────────
+    // Location filter
     List<Event> findByLocationContainingIgnoreCase(String location);
 
-    // ── Price range filter ───────────────────────────────────────────────────
+    // Price range filter
     List<Event> findByTicketPriceBetween(Double minPrice, Double maxPrice);
 
-    // ── Full-text keyword search across name, description, location ──────────
+    // Full-text keyword search across name, description, location
     @Query("SELECT e FROM Event e WHERE " +
             "LOWER(e.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(e.location) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Event> searchByKeyword(@Param("keyword") String keyword);
 
-    // ── Events ordered soonest-first ─────────────────────────────────────────
+    // Events ordered soonest-first
     List<Event> findAllByOrderByEventDateAsc();
 }
 
