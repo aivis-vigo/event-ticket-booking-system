@@ -10,19 +10,118 @@
     <div class="container">
         <header class="header">
             <h1>Event Ticket Booking System</h1>
-            <p class="subtitle">Discover and book amazing events</p>
+            <p class="subtitle">Start with registration or login, then explore and book amazing events</p>
         </header>
 
-        <nav class="nav">
-            <button class="nav-btn active" onclick="showTab('events')">Events</button>
-            <button class="nav-btn" onclick="showTab('tickets')">Tickets</button>
-            <button class="nav-btn" onclick="showTab('bookings')">Bookings</button>
-        </nav>
+        <section id="login" class="tab-content auth-content" style="display: none;">
+            <div class="auth-grid">
+                <div class="auth-intro">
+                    <span class="auth-pill">Step 1 · Sign in</span>
+                    <h2>Welcome back</h2>
+                    <p>
+                        Use your existing account to return to the booking dashboard, or switch back to registration if you’re new.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Access your saved browser account</li>
+                        <li>Continue where you left off</li>
+                        <li>Switch back to registration anytime</li>
+                    </ul>
+                </div>
+
+                <div class="form-container auth-card">
+                    <h3>Login</h3>
+                    <p class="form-note">Use the email and password you registered with in this browser.</p>
+
+                    <form id="login-form" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" placeholder="jane@example.com" autocomplete="email" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password" />
+                        </div>
+
+                        <div id="login-message" class="form-message" aria-live="polite"></div>
+
+                        <button type="submit">Login</button>
+                        <button type="button" class="secondary-btn" onclick="showRegistration()">
+                            Back to Registration
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="register" class="tab-content auth-content active">
+            <div class="auth-grid">
+                <div class="auth-intro">
+                    <span class="auth-pill">Step 1 · Create your account</span>
+                    <h2>Registration first, then access the booking dashboard</h2>
+                    <p>
+                        Create your profile to get started with event browsing, bookings, and future authentication features.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Store your profile details locally for now</li>
+                        <li>Prepare for login and role-based access later</li>
+                        <li>Keep the current event dashboard intact</li>
+                    </ul>
+                </div>
+
+                <div class="form-container auth-card">
+                    <h3>Create Account</h3>
+                    <p class="form-note">All fields are required. This demo stores registration data in your browser.</p>
+
+                    <form id="register-form" onsubmit="handleRegistration(event)">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" placeholder="Jane Doe" autocomplete="name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="jane@example.com" autocomplete="email" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" placeholder="Create a password" autocomplete="new-password" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Repeat your password" autocomplete="new-password" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select id="role">
+                                <option value="USER">User</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+
+                        <div id="registration-message" class="form-message" aria-live="polite"></div>
+
+                        <button type="submit">Register</button>
+                        <button type="button" class="secondary-btn" onclick="showLogin()">
+                            Back to Login
+                        </button>
+                        <button type="button" class="secondary-btn" id="dashboard-button" onclick="showDashboard()" style="display: none;">
+                            Go to Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
 
         <!-- Events Section -->
-        <section id="events" class="tab-content active">
-
-            <h2>Event Management</h2>
+        <section id="events" class="tab-content" style="display: none;">
+            <div class="section-head">
+                <h2>Event Management</h2>
+                <button class="secondary-btn" type="button" onclick="logoutUser()">Logout</button>
+            </div>
 
             <!-- Search Bar -->
             <div class="controls">

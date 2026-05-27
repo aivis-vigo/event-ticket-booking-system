@@ -50,6 +50,10 @@ mvn spring-boot:run
 
 The application will start and listen on **http://localhost:8080**
 
+### Frontend Flow
+
+The browser landing page now starts with a registration form. After creating an account, users can continue to the existing event dashboard.
+
 ### Alternative: Run the JAR File
 
 First, build the project:
@@ -125,6 +129,24 @@ Once endpoints are implemented, test them using:
 - **Browser:** http://localhost:8080/
 - **Postman or cURL:** For POST/PUT/DELETE requests
 - **VS Code REST Client or similar tools**
+
+### Auth Check
+
+The protected backend routes now require HTTP Basic auth:
+
+- `GET /api/events`
+- `GET /api/tickets`
+- `GET /api/bookings`
+
+### Default Login
+
+You do not need to register a new user every time. A default user is already available:
+
+- `user@example.com / user123`
+
+Optional admin login:
+
+- `admin / admin123`
 
 ## Development Workflow
 
