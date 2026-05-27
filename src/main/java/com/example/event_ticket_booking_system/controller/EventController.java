@@ -1,63 +1,78 @@
 package com.example.event_ticket_booking_system.controller;
 
-import com.example.event_ticket_booking_system.entity.Event;
-import com.example.event_ticket_booking_system.repository.EventRepository;
+import com.example.event_ticket_booking_system.dto.EventDTO;
+import com.example.event_ticket_booking_system.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
 
     @Autowired
-    private EventRepository eventRepository;
+    private EventService eventService;
 
-     @GetMapping
-     public List<Event> getAllEvents() {
-         return eventRepository.findAll();
-     }
+    // Optional ?keyword= query parameter for search
+    @GetMapping
+    public List<EventDTO> getAllEvents(@RequestParam(required = false) String keyword) {
+        if (keyword != null && !keyword.isBlank()) {
+            return eventService.searchEvents(keyword);
+        }
+        return eventService.getAllEvents();
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
-        Optional<Event> event = eventRepository.findById(id);
-        return event.map(ResponseEntity::ok)
-                   .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<EventDTO> getEventById(@PathVariable Long id) {
+        return eventService.getEventById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        Event savedEvent = eventRepository.save(event);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
+    @GetMapping("/upcoming")
+    public List<EventDTO> getUpcomingEvents() {
+        return eventService.getUpcomingEvents();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event eventDetails) {
-        Optional<Event> event = eventRepository.findById(id);
-        if (event.isPresent()) {
-            Event existingEvent = event.get();
-            existingEvent.setName(eventDetails.getName());
-            existingEvent.setDescription(eventDetails.getDescription());
-            existingEvent.setEventDate(eventDetails.getEventDate());
-            existingEvent.setLocation(eventDetails.getLocation());
-            existingEvent.setTotalTickets(eventDetails.getTotalTickets());
-            existingEvent.setTicketPrice(eventDetails.getTicketPrice());
-            return ResponseEntity.ok(eventRepository.save(existingEvent));
+    // GET /api/events/search?location=&minPrice=&maxPrice=
+    @GetMapping("/search")
+    public List<EventDTO> searchEvents(@RequestParam(required = false) String location, @RequestParam(required = false) Double minPrice, @RequestParam(required = false) Double maxPrice) {
+
+        if (location != null && !location.isBlank()) {
+            return eventService.getEventsByLocation(location);
         }
-        return ResponseEntity.notFound().build();
+        if (minPrice != null && maxPrice != null) {
+            return eventService.getEventsByPriceRange(minPrice, maxPrice);
+        }
+        return eventService.getAllEvents();
     }
 
+    // POST /api/events
+    @PostMapping
+    public ResponseEntity<?> createEvent(@RequestBody EventDTO eventDTO) {
+        try {
+            EventDTO created = eventService.createEvent(eventDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    // PUT /api/events/{id}
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateEvent(@PathVariable Long id, @RequestBody EventDTO eventDTO) {
+        try {
+            return eventService.updateEvent(id, eventDTO).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    // DELETE /api/events/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        if (eventRepository.existsById(id)) {
-            eventRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        return eventService.deleteEvent(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }
 

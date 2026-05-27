@@ -1,33 +1,58 @@
-// API Base URL
-const API_BASE = '/api';
+// Mock Database using localStorage
+let eventsDB = JSON.parse(localStorage.getItem('eventsDB')) || [];
+let nextEventId = Math.max(0, ...eventsDB.map(e => e.id || 0)) + 1;
 
 // Initialize the app
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    if (eventsDB.length === 0) {
+        eventsDB = [
+            {
+                id: 1,
+                name: "Summer Music Festival",
+                description: "A vibrant music festival with top artists",
+                eventDate: "2026-07-15T18:00:00",
+                location: "Central Park, NY",
+                totalTickets: 500,
+                ticketPrice: 89.99
+            },
+            {
+                id: 2,
+                name: "Tech Conference 2026",
+                description: "Future of technology and innovation",
+                eventDate: "2026-08-20T09:00:00",
+                location: "Convention Center, SF",
+                totalTickets: 1200,
+                ticketPrice: 299.00
+            }
+        ];
+        saveEvents();
+    }
     loadEvents();
 });
 
+// Save events to localStorage
+function saveEvents() {
+    localStorage.setItem('eventsDB', JSON.stringify(eventsDB));
+}
+
 // Tab switching
 function showTab(tabName) {
-    // Hide all tabs
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.style.display = 'none');
 
-    // Remove active class from all nav buttons
     const navBtns = document.querySelectorAll('.nav-btn');
     navBtns.forEach(btn => btn.classList.remove('active'));
 
-    // Show selected tab and mark nav button as active
     document.getElementById(tabName).style.display = 'block';
-    event.target.classList.add('active');
 
-    // Load data for selected tab
-    if (tabName === 'events') {
-        loadEvents();
-    } else if (tabName === 'tickets') {
-        loadTickets();
-    } else if (tabName === 'bookings') {
-        loadBookings();
-    }
+    const activeBtn = Array.from(navBtns).find(btn =>
+        btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabName)
+    );
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (tabName === 'events') loadEvents();
+    else if (tabName === 'tickets') loadTickets();
+    else if (tabName === 'bookings') loadBookings();
 }
 
 // Load and display events
@@ -35,156 +60,189 @@ function loadEvents() {
     const container = document.getElementById('events-container');
     container.innerHTML = '<div class="loader">Loading events...</div>';
 
-    fetch(`${API_BASE}/events`)
-        .then(response => response.json())
-        .then(events => {
-            if (events.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No events found</h3></div>';
-                return;
-            }
+    setTimeout(() => {
+        if (eventsDB.length === 0) {
+            container.innerHTML = '<div class="empty-state"><h3>No events found</h3></div>';
+            return;
+        }
 
-            container.innerHTML = events.map(event => `
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">${escapeHtml(event.name)}</div>
-                    </div>
-                    <p class="card-description">${escapeHtml(event.description)}</p>
-                    <div class="card-meta">
-                        <div class="meta-item">
-                            <span class="meta-label">📅 Date:</span>
-                            <span class="meta-value">${formatDate(event.eventDate)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">📍 Location:</span>
-                            <span class="meta-value">${escapeHtml(event.location)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">🎫 Tickets:</span>
-                            <span class="meta-value">${event.totalTickets}</span>
-                        </div>
-                        <div class="price">$${event.ticketPrice.toFixed(2)}</div>
-                    </div>
+        container.innerHTML = eventsDB.map(event => `
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">${escapeHtml(event.name)}</div>
                 </div>
-            `).join('');
-        })
-        .catch(error => {
-            console.error('Error loading events:', error);
-            container.innerHTML = '<div class="empty-state"><h3>Error loading events</h3></div>';
-        });
+                <p class="card-description">${escapeHtml(event.description)}</p>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">📅 Date:</span>
+                        <span class="meta-value">${formatDate(event.eventDate)}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📍 Location:</span>
+                        <span class="meta-value">${escapeHtml(event.location)}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">🎫 Tickets:</span>
+                        <span class="meta-value">${event.totalTickets}</span>
+                    </div>
+                    <div class="price">$${event.ticketPrice.toFixed(2)}</div>
+                </div>
+                <div class="card-actions">
+                    <button onclick="editEvent(${event.id})">Edit</button>
+                    <button class="danger-btn" onclick="deleteEvent(${event.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }, 300);
 }
 
-// Load and display tickets
+// ✅ Renamed from createEvent to avoid conflict
+function createNewEvent() {
+    const name = document.getElementById('eventName').value.trim();
+    const description = document.getElementById('eventDescription').value.trim();
+    const eventDate = document.getElementById('eventDate').value;
+    const location = document.getElementById('eventLocation').value.trim();
+    const totalTickets = parseInt(document.getElementById('totalTickets').value);
+    const ticketPrice = parseFloat(document.getElementById('ticketPrice').value);
+
+    if (!name || !description || !eventDate || !location || isNaN(totalTickets) || isNaN(ticketPrice)) {
+        alert("Please fill in all fields correctly");
+        return;
+    }
+
+    const newEvent = {
+        id: nextEventId++,
+        name,
+        description,
+        eventDate,
+        location,
+        totalTickets,
+        ticketPrice
+    };
+
+    eventsDB.unshift(newEvent);
+    saveEvents();
+
+    alert('✅ Event created successfully!');
+
+    // Clear form
+    document.getElementById('eventName').value = '';
+    document.getElementById('eventDescription').value = '';
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventLocation').value = '';
+    document.getElementById('totalTickets').value = '';
+    document.getElementById('ticketPrice').value = '';
+
+    loadEvents();
+}
+
+function deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    eventsDB = eventsDB.filter(event => event.id !== id);
+    saveEvents();
+    alert('Event deleted');
+    loadEvents();
+}
+
+function editEvent(id) {
+    const event = eventsDB.find(e => e.id === id);
+    if (!event) return;
+
+    const newName = prompt('Enter new event name:', event.name);
+    if (newName === null || newName.trim() === '') return;
+
+    event.name = newName.trim();
+    saveEvents();
+    alert('Event updated!');
+    loadEvents();
+}
+
+// Search & Filter functions
+function searchEvents() {
+    const keyword = document.getElementById('keyword').value.toLowerCase().trim();
+    if (!keyword) return loadEvents();
+
+    const filtered = eventsDB.filter(event =>
+        event.name.toLowerCase().includes(keyword) ||
+        event.description.toLowerCase().includes(keyword) ||
+        event.location.toLowerCase().includes(keyword)
+    );
+    displayEvents(filtered);
+}
+
+function loadUpcomingEvents() {
+    const now = new Date();
+    const upcoming = eventsDB.filter(event => new Date(event.eventDate) > now);
+    displayEvents(upcoming);
+}
+
+function searchByLocation() {
+    const location = document.getElementById('locationSearch').value.toLowerCase().trim();
+    if (!location) return loadEvents();
+
+    const filtered = eventsDB.filter(event =>
+        event.location.toLowerCase().includes(location)
+    );
+    displayEvents(filtered);
+}
+
+function searchByPrice() {
+    const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+
+    const filtered = eventsDB.filter(event =>
+        event.ticketPrice >= minPrice && event.ticketPrice <= maxPrice
+    );
+    displayEvents(filtered);
+}
+
+function displayEvents(events) {
+    const container = document.getElementById('events-container');
+    if (events.length === 0) {
+        container.innerHTML = '<div class="empty-state"><h3>No events found</h3></div>';
+        return;
+    }
+
+    container.innerHTML = events.map(event => `
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">${escapeHtml(event.name)}</div>
+            </div>
+            <p class="card-description">${escapeHtml(event.description)}</p>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">📍 Location:</span>
+                    <span class="meta-value">${escapeHtml(event.location)}</span>
+                </div>
+                <div class="price">$${event.ticketPrice.toFixed(2)}</div>
+            </div>
+            <div class="card-actions">
+                <button onclick="editEvent(${event.id})">Edit</button>
+                <button class="danger-btn" onclick="deleteEvent(${event.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Placeholder for other tabs
 function loadTickets() {
-    const container = document.getElementById('tickets-container');
-    container.innerHTML = '<div class="loader">Loading tickets...</div>';
-
-    fetch(`${API_BASE}/tickets`)
-        .then(response => response.json())
-        .then(tickets => {
-            if (tickets.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No tickets found</h3></div>';
-                return;
-            }
-
-            container.innerHTML = tickets.map(ticket => `
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">${escapeHtml(ticket.ticketNumber)}</div>
-                        <span class="card-badge ${ticket.status.toLowerCase()}">${ticket.status}</span>
-                    </div>
-                    <div class="card-meta">
-                        <div class="meta-item">
-                            <span class="meta-label">Event:</span>
-                            <span class="meta-value">${escapeHtml(ticket.event.name)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Price:</span>
-                            <span class="meta-value">$${ticket.price.toFixed(2)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Status:</span>
-                            <span class="meta-value">${ticket.status}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Ticket ID:</span>
-                            <span class="meta-value">#${ticket.id}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        })
-        .catch(error => {
-            console.error('Error loading tickets:', error);
-            container.innerHTML = '<div class="empty-state"><h3>Error loading tickets</h3></div>';
-        });
+    document.getElementById('tickets-container').innerHTML =
+        '<div class="empty-state"><h3>No tickets available yet</h3></div>';
 }
 
-// Load and display bookings
 function loadBookings() {
-    const container = document.getElementById('bookings-container');
-    container.innerHTML = '<div class="loader">Loading bookings...</div>';
-
-    fetch(`${API_BASE}/bookings`)
-        .then(response => response.json())
-        .then(bookings => {
-            if (bookings.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No bookings found</h3></div>';
-                return;
-            }
-
-            container.innerHTML = bookings.map(booking => `
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">${escapeHtml(booking.customerName)}</div>
-                        <span class="card-badge confirmed">${booking.status}</span>
-                    </div>
-                    <div class="card-meta">
-                        <div class="meta-item">
-                            <span class="meta-label">Event:</span>
-                            <span class="meta-value">${escapeHtml(booking.event.name)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Ticket:</span>
-                            <span class="meta-value">${escapeHtml(booking.ticket.ticketNumber)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Email:</span>
-                            <span class="meta-value">${escapeHtml(booking.customerEmail)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Booked:</span>
-                            <span class="meta-value">${formatDate(booking.bookingDate)}</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">Booking ID:</span>
-                            <span class="meta-value">#${booking.id}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        })
-        .catch(error => {
-            console.error('Error loading bookings:', error);
-            container.innerHTML = '<div class="empty-state"><h3>Error loading bookings</h3></div>';
-        });
+    document.getElementById('bookings-container').innerHTML =
+        '<div class="empty-state"><h3>No bookings yet</h3></div>';
 }
 
-// Helper function to format dates
+// Helper functions
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'};
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
-
