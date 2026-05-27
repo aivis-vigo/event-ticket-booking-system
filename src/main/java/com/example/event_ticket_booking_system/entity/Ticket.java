@@ -4,17 +4,21 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tickets")
-public class Ticket {
+public class Ticket extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    /*
+     * INHERITANCE:
+     * Ticket extends BaseEntity, so it inherits:
+     * - id
+     * - getId()
+     * - setId()
+     */
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String ticketNumber;
 
     @Column(nullable = false)
@@ -24,11 +28,19 @@ public class Ticket {
     @Column(nullable = false)
     private Double price;
 
+    /*
+     * ENUM:
+     * TicketStatus allows only predefined ticket states.
+     */
     public enum TicketStatus {
-        AVAILABLE, BOOKED
+        AVAILABLE,
+        RESERVED,
+        BOOKED,
+        CANCELLED
     }
 
-    public Ticket() {}
+    public Ticket() {
+    }
 
     public Ticket(Event event, String ticketNumber, Double price) {
         this.event = event;
@@ -37,14 +49,48 @@ public class Ticket {
         this.status = TicketStatus.AVAILABLE;
     }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
+    /*
+     * BUSINESS LOGIC:
+     * Checks if the ticket can be reserved or booked.
+     */
+    public boolean isAvailable() {
+        return this.status == TicketStatus.AVAILABLE;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    /*
+     * BUSINESS LOGIC:
+     * Changes status to RESERVED only if ticket is AVAILABLE.
+     */
+    public void reserve() {
+        if (!isAvailable()) {
+            throw new IllegalStateException("Only available tickets can be reserved.");
+        }
+        this.status = TicketStatus.RESERVED;
     }
+
+    /*
+     * BUSINESS LOGIC:
+     * Changes status to BOOKED only if ticket is AVAILABLE or RESERVED.
+     */
+    public void book() {
+        if (this.status != TicketStatus.AVAILABLE && this.status != TicketStatus.RESERVED) {
+            throw new IllegalStateException("Only available or reserved tickets can be booked.");
+        }
+        this.status = TicketStatus.BOOKED;
+    }
+
+    /*
+     * BUSINESS LOGIC:
+     * Changes status to CANCELLED.
+     */
+    public void cancel() {
+        this.status = TicketStatus.CANCELLED;
+    }
+
+    /*
+     * ENCAPSULATION:
+     * Fields are private, access is through getters and setters.
+     */
 
     public Event getEvent() {
         return event;
@@ -78,4 +124,3 @@ public class Ticket {
         this.price = price;
     }
 }
-
