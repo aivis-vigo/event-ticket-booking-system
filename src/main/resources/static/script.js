@@ -81,6 +81,16 @@ function clearCurrentUser() {
     localStorage.removeItem('currentUser');
 }
 
+// Build the HTTP Basic auth header for backend API calls.
+// The token is stored at login/registration as base64(email:password).
+function authHeaders(extra = {}) {
+    const headers = { ...extra };
+    if (currentUser && currentUser.authToken) {
+        headers['Authorization'] = `Basic ${currentUser.authToken}`;
+    }
+    return headers;
+}
+
 function setSectionVisibility(sectionId) {
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => {
@@ -146,10 +156,23 @@ function showDashboard() {
         return;
     }
 
-    setSectionVisibility('events');
-    loadEvents();
-    loadTickets();
-    loadBookings();
+    showSection('events');
+}
+
+// Switch between dashboard sections and (re)load that section's data.
+function showSection(sectionId) {
+    if (!requireAuth())
+        return;
+    setSectionVisibility(sectionId);
+    if (sectionId === 'events') {
+        loadEvents();
+    } 
+    else if (sectionId === 'tickets') {
+        loadTickets();
+    } 
+    else if (sectionId === 'bookings') {
+        loadBookings();
+    }
 }
 
 function handleRegistration(event) {
@@ -208,7 +231,8 @@ function handleRegistration(event) {
         id: newUser.id,
         fullName: newUser.fullName,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        authToken: btoa(`${newUser.email}:${password}`)
     });
 
     message.textContent = `Welcome, ${fullName}! Your account has been created.`;
@@ -245,7 +269,8 @@ function handleLogin(event) {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        authToken: btoa(`${user.email}:${password}`)
     });
 
     message.textContent = `Welcome back, ${user.fullName}!`;
@@ -306,7 +331,7 @@ function loadEvents() {
     }, 300);
 }
 
-// ✅ Renamed from createEvent to avoid conflict
+// Renamed from createEvent to avoid conflict
 function createNewEvent() {
     if (!requireAuth()) return;
 
@@ -335,7 +360,7 @@ function createNewEvent() {
     eventsDB.unshift(newEvent);
     saveEvents();
 
-    alert('✅ Event created successfully!');
+    alert('Event created successfully!');
 
     // Clear form
     document.getElementById('eventName').value = '';
@@ -450,19 +475,180 @@ function displayEvents(events) {
     `).join('');
 }
 
-// Placeholder for other tabs
-function loadTickets() {
-    if (!requireAuth()) return;
+// Load tickets from the backend API so the user can book them.
+async function loadTickets() {
+    if (!requireAuth()) 
+        return;
+    const container = document.getElementById('tickets-container');
+    container.innerHTML = '<div class="loader">Loading tickets...</div>';
+    try {
+        const response = await fetch('/api/tickets', { headers: authHeaders() });
+        if (!response.ok) {
+            throw new Error(`Request failed (${response.status})`);
+        }
 
-    document.getElementById('tickets-container').innerHTML =
-        '<div class="empty-state"><h3>No tickets available yet</h3></div>';
+        const tickets = await response.json();
+        if (!tickets.length) {
+            container.innerHTML = '<div class="empty-state"><h3>No tickets available yet</h3></div>';
+            return;
+        }
+
+        container.innerHTML = tickets.map(ticket => `
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">${escapeHtml(ticket.ticketNumber)}</div>
+                </div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">🎤 Event:</span>
+                        <span class="meta-value">${escapeHtml(ticket.eventName || '—')}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📌 Status:</span>
+                        <span class="meta-value">${escapeHtml(ticket.status)}</span>
+                    </div>
+                    <div class="price">$${Number(ticket.price).toFixed(2)}</div>
+                </div>
+                <div class="card-actions">
+                    <button onclick="bookTicket(${ticket.id})" ${ticket.available ? '' : 'disabled'}>
+                        ${ticket.available ? 'Book' : 'Unavailable'}
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } 
+    catch (error) {
+        container.innerHTML = `<div class="empty-state"><h3>Could not load tickets</h3><p>${escapeHtml(error.message)}</p></div>`;
+    }
 }
 
-function loadBookings() {
+// Create a booking for the selected ticket via POST /api/bookings.
+async function bookTicket(ticketId) {
+    if (!requireAuth()) 
+        return;
+    try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                ticketId,
+                customerName: currentUser.fullName,
+                customerEmail: currentUser.email
+            })
+        });
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `Request failed (${response.status})`);
+        }
+
+        alert('Ticket booked successfully!');
+        loadTickets();
+        loadBookings();
+    } catch (error) {
+        alert(`Could not book ticket: ${error.message}`);
+    }
+}
+
+// Load the current user's bookings via GET /api/bookings/my.
+async function loadBookings() {
     if (!requireAuth()) return;
 
-    document.getElementById('bookings-container').innerHTML =
-        '<div class="empty-state"><h3>No bookings yet</h3></div>';
+    const container = document.getElementById('bookings-container');
+    container.innerHTML = '<div class="loader">Loading bookings...</div>';
+
+    try {
+        const response = await fetch('/api/bookings/my', { headers: authHeaders() });
+        if (!response.ok) {
+            throw new Error(`Request failed (${response.status})`);
+        }
+
+        const bookings = await response.json();
+        if (!bookings.length) {
+            container.innerHTML = '<div class="empty-state"><h3>No bookings yet</h3></div>';
+            return;
+        }
+
+        container.innerHTML = bookings.map(booking => `
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">${escapeHtml(booking.eventName || 'Booking')}</div>
+                </div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">🎫 Ticket:</span>
+                        <span class="meta-value">${escapeHtml(booking.ticketNumber || '—')}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">👤 Customer:</span>
+                        <span class="meta-value">${escapeHtml(booking.customerName)}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📅 Booked:</span>
+                        <span class="meta-value">${booking.bookingDate ? formatDate(booking.bookingDate) : '—'}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📌 Status:</span>
+                        <span class="meta-value">${escapeHtml(booking.status)}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button onclick="cancelBooking(${booking.id})" ${booking.status === 'CANCELLED' ? 'disabled' : ''}>
+                        ${booking.status === 'CANCELLED' ? 'Cancelled' : 'Cancel'}
+                    </button>
+                    <button class="danger-btn" onclick="deleteBooking(${booking.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } 
+    catch (error) {
+        container.innerHTML = `<div class="empty-state"><h3>Could not load bookings</h3><p>${escapeHtml(error.message)}</p></div>`;
+    }
+}
+
+// Cancel booking via PATCH /api/bookings/{id}/cancel.
+async function cancelBooking(id) {
+    if (!requireAuth()) 
+        return;
+    if (!confirm('Cancel this booking? The ticket will be released.')) 
+        return;
+    try {
+        const response = await fetch(`/api/bookings/${id}/cancel`, {
+            method: 'PATCH',
+            headers: authHeaders()
+        });
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `Request failed (${response.status})`);
+        }
+        alert('Booking cancelled.');
+        loadBookings();
+        loadTickets();
+    } 
+    catch (error) {
+        alert(`Could not cancel booking: ${error.message}`);
+    }
+}
+
+// Delete a booking via DELETE /api/bookings/{id}.
+async function deleteBooking(id) {
+    if (!requireAuth()) 
+        return;
+    if (!confirm('Delete this booking?')) 
+        return;
+    try {
+        const response = await fetch(`/api/bookings/${id}`, {
+            method: 'DELETE',
+            headers: authHeaders()
+        });
+        if (!response.ok && response.status !== 204) {
+            throw new Error(`Request failed (${response.status})`);
+        }
+        alert('Booking deleted.');
+        loadBookings();
+    } 
+    catch (error) {
+        alert(`Could not delete booking: ${error.message}`);
+    }
 }
 
 // Helper functions
@@ -472,7 +658,8 @@ function formatDate(dateString) {
 }
 
 function escapeHtml(text) {
-    if (!text) return '';
+    if (!text) 
+        return '';
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
 }

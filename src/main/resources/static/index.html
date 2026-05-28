@@ -120,7 +120,12 @@
         <section id="events" class="tab-content" style="display: none;">
             <div class="section-head">
                 <h2>Event Management</h2>
-                <button class="secondary-btn" type="button" onclick="logoutUser()">Logout</button>
+                <div class="controls">
+                    <button type="button" onclick="showSection('events')">Events</button>
+                    <button type="button" onclick="showSection('tickets')">Tickets</button>
+                    <button type="button" onclick="showSection('bookings')">My Bookings</button>
+                    <button class="secondary-btn" type="button" onclick="logoutUser()">Logout</button>
+                </div>
             </div>
 
             <!-- Search Bar -->
@@ -164,7 +169,15 @@
 
         <!-- Tickets Section -->
         <section id="tickets" class="tab-content" style="display: none;">
-            <h2>All Tickets</h2>
+            <div class="section-head">
+                <h2>All Tickets</h2>
+                <div class="controls">
+                    <button type="button" onclick="showSection('events')">Events</button>
+                    <button type="button" onclick="showSection('tickets')">Tickets</button>
+                    <button type="button" onclick="showSection('bookings')">My Bookings</button>
+                    <button class="secondary-btn" type="button" onclick="logoutUser()">Logout</button>
+                </div>
+            </div>
             <div id="tickets-container" class="cards-grid">
                 <div class="loader">Loading tickets...</div>
             </div>
@@ -172,7 +185,15 @@
 
         <!-- Bookings Section -->
         <section id="bookings" class="tab-content" style="display: none;">
-            <h2>Recent Bookings</h2>
+            <div class="section-head">
+                <h2>My Bookings</h2>
+                <div class="controls">
+                    <button type="button" onclick="showSection('events')">Events</button>
+                    <button type="button" onclick="showSection('tickets')">Tickets</button>
+                    <button type="button" onclick="showSection('bookings')">My Bookings</button>
+                    <button class="secondary-btn" type="button" onclick="logoutUser()">Logout</button>
+                </div>
+            </div>
             <div id="bookings-container" class="cards-grid">
                 <div class="loader">Loading bookings...</div>
             </div>
