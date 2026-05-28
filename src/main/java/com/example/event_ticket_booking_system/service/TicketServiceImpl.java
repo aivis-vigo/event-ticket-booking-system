@@ -5,6 +5,8 @@ import com.example.event_ticket_booking_system.entity.Event;
 import com.example.event_ticket_booking_system.entity.Ticket;
 import com.example.event_ticket_booking_system.repository.EventRepository;
 import com.example.event_ticket_booking_system.repository.TicketRepository;
+import com.example.event_ticket_booking_system.entity.Booking;
+import com.example.event_ticket_booking_system.repository.BookingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,16 +23,21 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final EventRepository eventRepository;
-
+    private final BookingRepository bookingRepository;
     /*
      * DEPENDENCY INJECTION:
      * Constructor injection is used here.
      * We do not create repository objects manually with "new".
      * Spring provides them automatically.
      */
-    public TicketServiceImpl(TicketRepository ticketRepository, EventRepository eventRepository) {
+    public TicketServiceImpl(
+            TicketRepository ticketRepository,
+            EventRepository eventRepository,
+            BookingRepository bookingRepository
+    ) {
         this.ticketRepository = ticketRepository;
         this.eventRepository = eventRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     /*
@@ -130,7 +137,22 @@ public class TicketServiceImpl implements TicketService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    /*
+     * USER TICKETS:
+     * Returns tickets for a specific user.
+     */
+    @Override
+    public List<TicketDTO> getTicketsForCurrentUser(String username) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username is required.");
+        }
 
+        return bookingRepository.findByCustomerEmailIgnoreCase(username)
+                .stream()
+                .map(Booking::getTicket)
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
     /*
      * UPDATE TICKET:
      * Updates ticket number, price, event and status.

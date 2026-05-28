@@ -25,6 +25,8 @@ public interface TicketService {
 
     List<TicketDTO> getAvailableTicketsByEvent(Long eventId);
 
+    List<TicketDTO> getTicketsForCurrentUser(String username);
+
     TicketDTO updateTicket(Long id, TicketDTO ticketDTO);
 
     TicketDTO updateTicketStatus(Long id, Ticket.TicketStatus status);

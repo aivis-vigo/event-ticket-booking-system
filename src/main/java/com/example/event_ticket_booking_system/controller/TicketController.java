@@ -3,6 +3,7 @@ package com.example.event_ticket_booking_system.controller;
 import com.example.event_ticket_booking_system.dto.TicketDTO;
 import com.example.event_ticket_booking_system.entity.Ticket;
 import com.example.event_ticket_booking_system.service.TicketService;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +84,24 @@ public class TicketController {
 
         return ResponseEntity.ok(ticketService.getAllTickets());
     }
+    /*
+     * Gets tickets for the currently logged-in user.
+     *
+     * Example:
+     * GET /api/tickets/my
+     *
+     * The current user is taken from Spring Security Authentication.
+     * If user is logged in, returns only tickets connected to this user.
+     * If user is not logged in, returns 401 Unauthorized.
+     */
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyTickets(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated.");
+        }
 
+        return ResponseEntity.ok(ticketService.getTicketsForCurrentUser(authentication.getName()));
+    }
     /*
      * Gets one ticket by its id.
      *
