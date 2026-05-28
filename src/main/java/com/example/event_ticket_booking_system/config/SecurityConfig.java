@@ -25,7 +25,8 @@ public class SecurityConfig {
 				.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/", "/index.html", "/styles.css", "/script.js", "/**/*.css", "/**/*.js", "/h2-console/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/events/**", "/api/tickets/**", "/api/bookings/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/events/**", "/api/tickets/**", "/api/bookings/**").authenticated()
 						.requestMatchers(HttpMethod.POST, "/api/events/**", "/api/tickets/**", "/api/bookings/**").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/api/events/**", "/api/tickets/**", "/api/bookings/**").authenticated()
 						.requestMatchers(HttpMethod.DELETE, "/api/events/**", "/api/tickets/**", "/api/bookings/**").authenticated()

@@ -24,4 +24,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     Optional<Ticket> findByTicketNumberIgnoreCase(String ticketNumber);
 
     boolean existsByTicketNumberIgnoreCase(String ticketNumber);
+
+    long countByStatus(Ticket.TicketStatus status);
 }
