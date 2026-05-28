@@ -7,6 +7,7 @@ let nextEventId = Math.max(0, ...eventsDB.map(e => e.id || 0)) + 1;
 const DEFAULT_USER = {
     id: 1,
     fullName: 'Default User',
+    username: 'user',
     email: 'user@example.com',
     password: 'user123',
     role: 'USER',
@@ -16,6 +17,7 @@ const DEFAULT_USER = {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function () {
     seedDefaultUser();
+    renderCurrentUserBadge();
 
     if (eventsDB.length === 0) {
         eventsDB = [
@@ -68,17 +70,111 @@ function seedDefaultUser() {
     if (!exists) {
         usersDB.unshift({ ...DEFAULT_USER });
         saveUsers();
+        return;
+    }
+
+    const defaultUser = usersDB.find(user => user.email && user.email.toLowerCase() === DEFAULT_USER.email);
+    if (defaultUser && !defaultUser.username) {
+        defaultUser.username = DEFAULT_USER.username;
+        saveUsers();
     }
 }
 
 function saveCurrentUser(user) {
     currentUser = user;
     localStorage.setItem('currentUser', JSON.stringify(user));
+    renderCurrentUserBadge();
 }
 
 function clearCurrentUser() {
     currentUser = null;
     localStorage.removeItem('currentUser');
+    renderCurrentUserBadge();
+}
+
+function renderCurrentUserBadge() {
+    const badge = document.getElementById('logged-in-user');
+    if (!badge) {
+        return;
+    }
+
+    if (!currentUser) {
+        badge.style.display = 'none';
+        badge.textContent = '';
+        closeUserProfile();
+        return;
+    }
+
+    const displayName = currentUser.fullName || currentUser.username || currentUser.email;
+    const loginId = currentUser.username ? `@${currentUser.username}` : currentUser.email;
+    badge.textContent = `Logged in as ${displayName} (${loginId})`;
+    badge.style.display = 'inline-block';
+}
+
+function getCurrentUserDetails() {
+    if (!currentUser) {
+        return null;
+    }
+
+    const storedUser = usersDB.find(user => user.id === currentUser.id)
+        || usersDB.find(user => user.email === currentUser.email)
+        || null;
+
+    if (!storedUser) {
+        return {
+            fullName: currentUser.fullName || '-',
+            username: currentUser.username || '-',
+            email: currentUser.email || '-',
+            role: currentUser.role || '-',
+            createdAt: '-'
+        };
+    }
+
+    return {
+        fullName: storedUser.fullName || '-',
+        username: storedUser.username || '-',
+        email: storedUser.email || '-',
+        role: storedUser.role || '-',
+        createdAt: storedUser.createdAt ? formatDate(storedUser.createdAt) : '-'
+    };
+}
+
+function renderUserProfilePanel() {
+    const details = getCurrentUserDetails();
+    if (!details) {
+        return;
+    }
+
+    document.getElementById('profile-fullName').textContent = details.fullName;
+    document.getElementById('profile-username').textContent = details.username;
+    document.getElementById('profile-email').textContent = details.email;
+    document.getElementById('profile-role').textContent = details.role;
+    document.getElementById('profile-createdAt').textContent = details.createdAt;
+}
+
+function toggleUserProfile() {
+    if (!requireAuth('Please log in to view profile details.')) {
+        return;
+    }
+
+    const panel = document.getElementById('user-profile-panel');
+    if (!panel) {
+        return;
+    }
+
+    if (panel.style.display === 'none' || !panel.style.display) {
+        renderUserProfilePanel();
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function closeUserProfile() {
+    const panel = document.getElementById('user-profile-panel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
 }
 
 // Build the HTTP Basic auth header for backend API calls.
@@ -117,6 +213,7 @@ function requireAuth(redirectMessage = 'Please log in to access the dashboard.')
 
 function showRegistration() {
     setSectionVisibility('register');
+    closeUserProfile();
     const message = document.getElementById('registration-message');
     if (message && !message.textContent) {
         message.textContent = 'Create your account to unlock the dashboard.';
@@ -135,9 +232,10 @@ function showRegistration() {
 
 function showLogin() {
     setSectionVisibility('login');
+    closeUserProfile();
     const message = document.getElementById('login-message');
     if (message && !message.textContent) {
-        message.textContent = 'Sign in with your registered account.';
+        message.textContent = 'Sign in with your username or email.';
         message.className = 'form-message info';
     }
     const registrationMessage = document.getElementById('registration-message');
@@ -179,14 +277,21 @@ function handleRegistration(event) {
     event.preventDefault();
 
     const fullName = document.getElementById('fullName').value.trim();
+    const username = document.getElementById('username').value.trim().toLowerCase();
     const email = document.getElementById('email').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const role = document.getElementById('role').value;
     const message = document.getElementById('registration-message');
 
-    if (!fullName || !email || !password || !confirmPassword || !role) {
+    if (!fullName || !username || !email || !password || !confirmPassword || !role) {
         message.textContent = 'Please fill in every field.';
+        message.className = 'form-message error';
+        return;
+    }
+
+    if (!/^[a-z0-9_.-]{3,20}$/.test(username)) {
+        message.textContent = 'Username must be 3-20 characters and use letters, numbers, dot, underscore, or dash.';
         message.className = 'form-message error';
         return;
     }
@@ -216,9 +321,17 @@ function handleRegistration(event) {
         return;
     }
 
+    const usernameExists = usersDB.some(user => user.username && user.username.toLowerCase() === username);
+    if (usernameExists) {
+        message.textContent = 'This username is already taken.';
+        message.className = 'form-message error';
+        return;
+    }
+
     const newUser = {
         id: Date.now(),
         fullName,
+        username,
         email,
         password,
         role,
@@ -230,6 +343,7 @@ function handleRegistration(event) {
     saveCurrentUser({
         id: newUser.id,
         fullName: newUser.fullName,
+        username: newUser.username,
         email: newUser.email,
         role: newUser.role,
         authToken: btoa(`${newUser.email}:${password}`)
@@ -248,19 +362,23 @@ function handleRegistration(event) {
 function handleLogin(event) {
     event.preventDefault();
 
-    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
     const message = document.getElementById('login-message');
 
-    if (!email || !password) {
-        message.textContent = 'Please enter both your email and password.';
+    if (!identifier || !password) {
+        message.textContent = 'Please enter your username/email and password.';
         message.className = 'form-message error';
         return;
     }
 
-    const user = usersDB.find(item => item.email === email && item.password === password);
+    const user = usersDB.find(item => {
+        const byEmail = item.email && item.email.toLowerCase() === identifier;
+        const byUsername = item.username && item.username.toLowerCase() === identifier;
+        return (byEmail || byUsername) && item.password === password;
+    });
     if (!user) {
-        message.textContent = 'Invalid email or password.';
+        message.textContent = 'Invalid username/email or password.';
         message.className = 'form-message error';
         return;
     }
@@ -268,6 +386,7 @@ function handleLogin(event) {
     saveCurrentUser({
         id: user.id,
         fullName: user.fullName,
+        username: user.username || '',
         email: user.email,
         role: user.role,
         authToken: btoa(`${user.email}:${password}`)

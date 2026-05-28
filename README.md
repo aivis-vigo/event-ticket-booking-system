@@ -52,7 +52,12 @@ The application will start and listen on **http://localhost:8080**
 
 ### Frontend Flow
 
-The browser landing page now starts with a registration form. After creating an account, users can continue to the existing event dashboard.
+The browser landing page starts with a registration form. After creating an account, users can continue to the existing event dashboard.
+
+- Registration requires: full name, username, email, password, and role.
+- Login supports either username or email with password.
+- After login, the header shows who is signed in.
+- Click the signed-in user badge to open the profile panel (full name, username, email, role, and registration date).
 
 ### Alternative: Run the JAR File
 
@@ -142,7 +147,8 @@ The protected backend routes now require HTTP Basic auth:
 
 You do not need to register a new user every time. A default user is already available:
 
-- `user@example.com / user123`
+- Username login: `user / user123`
+- Email login: `user@example.com / user123`
 
 Optional admin login:
 

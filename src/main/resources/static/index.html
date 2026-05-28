@@ -11,7 +11,22 @@
         <header class="header">
             <h1>Event Ticket Booking System</h1>
             <p class="subtitle">Start with registration or login, then explore and book amazing events</p>
+            <button id="logged-in-user" class="logged-in-user" type="button" style="display: none;" onclick="toggleUserProfile()"></button>
         </header>
+
+        <section id="user-profile-panel" class="user-profile-panel" style="display: none;">
+            <div class="user-profile-head">
+                <h3>My Profile</h3>
+                <button type="button" class="secondary-btn" onclick="closeUserProfile()">Close</button>
+            </div>
+            <div class="user-profile-grid">
+                <div><span class="profile-label">Full Name</span><span id="profile-fullName" class="profile-value">-</span></div>
+                <div><span class="profile-label">Username</span><span id="profile-username" class="profile-value">-</span></div>
+                <div><span class="profile-label">Email</span><span id="profile-email" class="profile-value">-</span></div>
+                <div><span class="profile-label">Role</span><span id="profile-role" class="profile-value">-</span></div>
+                <div><span class="profile-label">Registered</span><span id="profile-createdAt" class="profile-value">-</span></div>
+            </div>
+        </section>
 
         <section id="login" class="tab-content auth-content" style="display: none;">
             <div class="auth-grid">
@@ -30,12 +45,12 @@
 
                 <div class="form-container auth-card">
                     <h3>Login</h3>
-                    <p class="form-note">Use the email and password you registered with in this browser.</p>
+                    <p class="form-note">Use your username or email with your password.</p>
 
                     <form id="login-form" onsubmit="handleLogin(event)">
                         <div class="form-group">
-                            <label for="loginEmail">Email</label>
-                            <input type="email" id="loginEmail" placeholder="jane@example.com" autocomplete="email" />
+                            <label for="loginIdentifier">Username or Email</label>
+                            <input type="text" id="loginIdentifier" placeholder="janedoe or jane@example.com" autocomplete="username" />
                         </div>
 
                         <div class="form-group">
@@ -77,6 +92,11 @@
                         <div class="form-group">
                             <label for="fullName">Full Name</label>
                             <input type="text" id="fullName" placeholder="Jane Doe" autocomplete="name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" placeholder="janedoe" autocomplete="username" />
                         </div>
 
                         <div class="form-group">
