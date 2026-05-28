@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">System statistics and management overview</p>
+    </header>
+
+    <section class="tab-content" style="display: block;">
+        <div class="section-head">
+            <h2>Dashboard Statistics</h2>
+            <a href="#" class="secondary-btn" onclick="adminLogout()">Logout</a>
+        </div>
+
+        <div id="admin-stats" class="cards-grid">
+            <div class="loader">Loading admin statistics...</div>
+        </div>
+
+        <h2>Events</h2>
+        <div id="admin-events" class="cards-grid"></div>
+
+        <h2>Tickets</h2>
+        <div id="admin-tickets" class="cards-grid"></div>
+
+        <h2>Bookings</h2>
+        <div id="admin-bookings" class="cards-grid"></div>
+    </section>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

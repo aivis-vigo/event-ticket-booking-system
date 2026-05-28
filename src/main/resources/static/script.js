@@ -42,7 +42,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (currentUser) {
-        showDashboard();
+
+        if (currentUser.role === 'ADMIN') {
+            window.location.href = '/admin.html';
+        } else {
+            showDashboard();
+        }
+
     } else {
         showRegistration();
     }
@@ -245,7 +251,11 @@ function handleLogin(event) {
     message.textContent = `Welcome back, ${user.fullName}!`;
     message.className = 'form-message success';
     document.getElementById('login-form').reset();
-    showDashboard();
+    if (user.role === 'ADMIN') {
+        window.location.href = '/admin.html';
+    } else {
+        showDashboard();
+    }
 }
 
 function logoutUser() {
